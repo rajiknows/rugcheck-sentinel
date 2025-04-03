@@ -1,103 +1,196 @@
-import Image from "next/image";
+"use client";
+import { useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    const [tokenAddress, setTokenAddress] = useState("");
+    const [data, setData] = useState<any>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [labelWallet, setLabelWallet] = useState("");
+    const [labelText, setLabelText] = useState("");
+    const [evidence, setEvidence] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    const fetchTokenData = async () => {
+        setError(null);
+        try {
+            const res = await fetch(`/api/token/${tokenAddress}`);
+            if (!res.ok) throw new Error("Failed to fetch data");
+            const result = await res.json();
+            setData(result);
+        } catch (err) {
+            setError("Error fetching token data");
+        }
+    };
+
+    const submitLabel = async () => {
+        try {
+            const res = await fetch("/api/wallet/label", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    walletAddress: labelWallet,
+                    label: labelText,
+                    evidence,
+                }),
+            });
+            if (!res.ok) throw new Error("Failed to submit label");
+            alert("Label submitted successfully!");
+            setLabelWallet("");
+            setLabelText("");
+            setEvidence("");
+        } catch (err) {
+            setError("Error submitting label");
+        }
+    };
+
+    return (
+        <div style={{ padding: "20px" }}>
+            <h1>Token Risk Assessment</h1>
+            <div>
+                <input
+                    value={tokenAddress}
+                    onChange={(e) => setTokenAddress(e.target.value)}
+                    placeholder="Enter token address"
+                    style={{ marginRight: "10px", padding: "5px" }}
+                />
+                <button
+                    onClick={fetchTokenData}
+                    style={{ padding: "5px 10px" }}
+                >
+                    Analyze
+                </button>
+            </div>
+            {error && <p style={{ color: "red" }}>{error}</p>}
+            {data && (
+                <div>
+                    <h2>Token: {data.token}</h2>
+                    <h3>Creator: {data.creator}</h3>
+                    <h3>Wallet Profiles</h3>
+                    <table
+                        style={{ borderCollapse: "collapse", width: "100%" }}
+                    >
+                        <thead>
+                            <tr>
+                                <th
+                                    style={{
+                                        border: "1px solid #ddd",
+                                        padding: "8px",
+                                    }}
+                                >
+                                    Address
+                                </th>
+                                <th
+                                    style={{
+                                        border: "1px solid #ddd",
+                                        padding: "8px",
+                                    }}
+                                >
+                                    Amount
+                                </th>
+                                <th
+                                    style={{
+                                        border: "1px solid #ddd",
+                                        padding: "8px",
+                                    }}
+                                >
+                                    Percentage
+                                </th>
+                                <th
+                                    style={{
+                                        border: "1px solid #ddd",
+                                        padding: "8px",
+                                    }}
+                                >
+                                    Risk Score
+                                </th>
+                                <th
+                                    style={{
+                                        border: "1px solid #ddd",
+                                        padding: "8px",
+                                    }}
+                                >
+                                    Insider
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.walletProfiles.map(
+                                (profile: any, index: number) => (
+                                    <tr key={index}>
+                                        <td
+                                            style={{
+                                                border: "1px solid #ddd",
+                                                padding: "8px",
+                                            }}
+                                        >
+                                            {profile.address}
+                                        </td>
+                                        <td
+                                            style={{
+                                                border: "1px solid #ddd",
+                                                padding: "8px",
+                                            }}
+                                        >
+                                            {profile.amount}
+                                        </td>
+                                        <td
+                                            style={{
+                                                border: "1px solid #ddd",
+                                                padding: "8px",
+                                            }}
+                                        >
+                                            {(profile.percentage * 100).toFixed(
+                                                2,
+                                            )}
+                                            %
+                                        </td>
+                                        <td
+                                            style={{
+                                                border: "1px solid #ddd",
+                                                padding: "8px",
+                                            }}
+                                        >
+                                            {profile.riskScore}
+                                        </td>
+                                        <td
+                                            style={{
+                                                border: "1px solid #ddd",
+                                                padding: "8px",
+                                            }}
+                                        >
+                                            {profile.isInsider ? "Yes" : "No"}
+                                        </td>
+                                    </tr>
+                                ),
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            <h3>Community Labeling</h3>
+            <div>
+                <input
+                    value={labelWallet}
+                    onChange={(e) => setLabelWallet(e.target.value)}
+                    placeholder="Wallet address"
+                    style={{ marginRight: "10px", padding: "5px" }}
+                />
+                <input
+                    value={labelText}
+                    onChange={(e) => setLabelText(e.target.value)}
+                    placeholder="Label (e.g., Suspicious)"
+                    style={{ marginRight: "10px", padding: "5px" }}
+                />
+                <input
+                    value={evidence}
+                    onChange={(e) => setEvidence(e.target.value)}
+                    placeholder="Evidence (optional)"
+                    style={{ marginRight: "10px", padding: "5px" }}
+                />
+                <button onClick={submitLabel} style={{ padding: "5px 10px" }}>
+                    Submit Label
+                </button>
+            </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    );
 }
