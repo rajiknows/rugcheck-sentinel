@@ -14,11 +14,11 @@ const calculateRiskScore = (holder: any, insiders: any[]) => {
     return Math.min(score, 100); // Cap at 100
 };
 
-export async function GET(
-    req: NextRequest,
-    { params }: { params: { id: string } },
-) {
-    const { id } = params;
+export async function GET(req: NextRequest) {
+    const url = new URL(req.url);
+    const pathParts = url.pathname.split("/");
+    const id = pathParts[pathParts.length - 1]; // Get the last part of the path
+
     try {
         // Fetch token report
         const reportResponse = await axios.get(

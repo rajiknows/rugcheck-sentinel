@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addAlert, getAlerts } from "../../../lib/db";
 
 export async function POST(req: NextRequest) {
     try {
